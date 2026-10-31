@@ -8,6 +8,7 @@ on:
     branches: [publicaciones]
     paths:
       - "dist/msix/**"
+      - "dist/IslaDinamica-Setup-*.exe"
       - ".github/workflows/msix.yml"
   workflow_dispatch:
 
