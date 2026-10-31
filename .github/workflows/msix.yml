@@ -1,0 +1,42 @@
+# Arma el paquete MSIX de Isla dinámica (para la Microsoft Store o para probar en una PC).
+# Toma el instalador más nuevo de dist/, lo desempaqueta y lo empaqueta con el Windows SDK.
+# Resultado: artefacto "IslaDinamica-msix" en la ejecución (Actions → la ejecución → Artifacts).
+name: Empaquetar MSIX
+
+on:
+  push:
+    branches: [publicaciones]
+    paths:
+      - "dist/msix/**"
+      - ".github/workflows/msix.yml"
+  workflow_dispatch:
+
+jobs:
+  msix:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Desempaquetar el instalador más nuevo
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist\IslaDinamica-Setup-*.exe |
+            Sort-Object { [Version]($_.BaseName -replace '^IslaDinamica-Setup-', '') } | Select-Object -Last 1
+          $version = $setup.BaseName -replace '^IslaDinamica-Setup-', ''
+          7z x $setup.FullName -oextract -y | Out-Null
+          $exe = Get-ChildItem extract -Recurse -Filter IslaDinamica.exe | Select-Object -First 1
+          if (-not $exe) { throw 'No se encontró IslaDinamica.exe dentro del instalador.' }
+          # Lo que NSIS agrega para sí mismo no va en el paquete.
+          Remove-Item (Join-Path $exe.DirectoryName '$PLUGINSDIR') -Recurse -Force -ErrorAction SilentlyContinue
+          "APP_DIR=$($exe.DirectoryName)" >> $env:GITHUB_ENV
+          "APP_VERSION=$version" >> $env:GITHUB_ENV
+          Write-Host "Versión $version desde $($exe.DirectoryName)"
+
+      - name: Armar el MSIX
+        shell: pwsh
+        run: .\dist\msix\build-msix.ps1 -AppDir $env:APP_DIR -Version $env:APP_VERSION -OutDir out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IslaDinamica-msix
+          path: out/*

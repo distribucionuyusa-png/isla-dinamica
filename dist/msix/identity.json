@@ -1,0 +1,7 @@
+{
+  "_comment": "Identidad del paquete. Para la Microsoft Store, copiar los valores de Partner Center → la app → Administración de productos → Identidad del producto. Mientras tanto se usa una identidad de prueba.",
+  "IdentityName": "IslaDinamica.Prueba",
+  "Publisher": "CN=IslaDinamicaPruebas",
+  "PublisherDisplayName": "Isla dinámica (prueba)",
+  "SignForSideload": true
+}
